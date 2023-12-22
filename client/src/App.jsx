@@ -1,12 +1,13 @@
-import { useState } from 'react'
+import { useState,useEffect } from 'react'
 import AddIcon from '@mui/icons-material/Add';
 import ToDoList from './components/toDoList';
 import './App.css'
 import { useDispatch, useSelector } from 'react-redux';
-import { closeModal, openModal } from './components/redux/modalSlice';
-import { setInputModal, setSelectedPriority } from './components/redux/formSlice';
-import { closedeletedModal } from './components/redux/deletemodalSlice';
-
+import { closeModal, openModal } from './redux/modalSlice';
+import { setInputModal, setSelectedPriority, taskFetch,addTask,updateTask } from './redux/formSlice';
+import { closedeletedModal } from './redux/deletemodalSlice';
+import axios from 'axios'
+import { deleteTask } from './redux/formSlice';
 function App() {
   
  
@@ -17,21 +18,57 @@ function App() {
 
   const dispatch=useDispatch()
   const {showModal,ModalType}=useSelector(state=>state.modal)
-  const {selectedPriority,inputModal}=useSelector(state=>state.form)
-  const {showdeleteModal}=useSelector(state=>state.deletemodal)
+  const {selectedPriority,inputModal,tasksArray}=useSelector(state=>state.form)
+  const {showdeleteModal,taskIdToDelete}=useSelector(state=>state.deletemodal)
   const handlePriorClick=(index,value)=>
   {
     setSelectedButton(index)
     dispatch(setSelectedPriority(value))
 
   }
-  const handleAddClick=()=>
+  const handleAddClick=async(e)=>
   {
+    e.preventDefault()
     const data={
-      inputModal,
-      selectedPriority
+      task_name: inputModal, 
+      priority: selectedPriority
     }
-    console.log(data)
+    try {
+      const res=await axios.post('http://localhost:3000/api/create-task',data)
+      dispatch(addTask(res.data))
+      dispatch(closeModal())
+      dispatch(setInputModal(''))
+      dispatch(setSelectedPriority('low'))
+
+
+      
+    } catch (error) {
+      console.log(error.message)
+      
+    }
+  }
+  useEffect(() => {
+    const url='http://localhost:3000/api/tasks'
+  
+   dispatch(taskFetch(url))
+  }, [dispatch])
+
+  const handleDeleteTask=async()=>
+  {
+    try {
+      const res=await axios.delete(`http://localhost:3000/api/delete-task/${taskIdToDelete}`)
+      console.log(res.data)
+      dispatch(closedeletedModal())
+      dispatch(deleteTask(taskIdToDelete))
+
+
+
+      
+    } catch (error) {
+      console.log(error.message)
+      
+    }
+
   }
  
   return (
@@ -52,11 +89,17 @@ function App() {
       
 
       <div className='my-12'>
-        <ToDoList/>
-        <ToDoList/>
-        <ToDoList/>
-        <ToDoList/>
-        <ToDoList/>
+       {
+        tasksArray.length>0 ?(
+          tasksArray
+          ?.map((task,index)=>
+         (
+          <ToDoList key={index} task={task} />
+         ))
+
+        ): 'NO TASKS :('
+       
+       }
         
         
 
@@ -134,7 +177,7 @@ function App() {
           <div className='mx-auto max-w-300px'>
             <p className='text-black text-2xl font-semibold leading-6 text-center'>Are you sure you want to delete this task?</p>
             <div className='flex justify-center gap-6 mt-8'>
-              <button className='bg-[#713fff] rounded-lg shadow-md text-white cursor-pointer text-base font-semibold outline-none py-3 px-8'>Delete</button>
+              <button onClick={handleDeleteTask} className='bg-[#713fff] rounded-lg shadow-md text-white cursor-pointer text-base font-semibold outline-none py-3 px-8'>Delete</button>
               
               <button onClick={()=>dispatch(closedeletedModal())} className=' rounded-lg border border-solid border-[#d8e0f0] text-[#7d8592] cursor-pointer  shadow-sm font-normal outline-none py-3 px-8'>Cancel</button>
 
