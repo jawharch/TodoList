@@ -11,3 +11,7 @@ body
     font-family: Poppins,sans-serif;
    
 }
+form {
+    display: block;
+    margin-top: 0em;
+}
