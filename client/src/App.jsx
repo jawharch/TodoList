@@ -189,13 +189,13 @@ function App() {
             <li  className= {`border border-solid border-red-500 text-red-500 rounded-lg cursor-pointer text-base font-medium py-2 px-4 text-center uppercase w-24 border border-solid border-gray-300 ${
               selectedPriority==='high' ? 'bg-red-600 text-white':''
             }`}  onClick={()=>handlePriorClick('high')} >high</li>
-            <li  className={` border border-solid border-yellow-500 text-yellow-500 rounded-lg cursor-pointer text-base font-medium py-2 px-4 text-center uppercase w-24 border border-solid border-gray-300 ${
-              selectedPriority==='medium' ? ' bg-yellow-500 text-[#fff]':''
-            }` }
+            <li  className={`border border-solid border-yellow-500 text-yellow-500 rounded-lg cursor-pointer text-base font-medium py-2 px-4 text-center uppercase w-24 border border-solid border-gray-300 ${
+              selectedPriority==='medium' ? ' bg-yellow-500  text-[#ffff]': ''
+            }`}
             onClick={()=>handlePriorClick('medium')}>medium</li>
             <li  className={`border border-solid border-green-500 text-green-500 rounded-lg cursor-pointer text-base font-medium py-2 px-4 text-center uppercase w-24 border border-solid border-gray-300
             ${
-              selectedPriority==='low' ? ' text-[#fff]  bg-green-500':''
+              selectedPriority==='low' ? 'bg-green-500 text-white ':''
             } 
             
             
