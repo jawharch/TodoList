@@ -1,12 +1,19 @@
-import React from 'react'
+import React, { useState,useEffect } from 'react'
 import CircularProgress from '@mui/material/CircularProgress';
-import { useDispatch } from 'react-redux';
+import { useDispatch,useSelector } from 'react-redux';
 import { openModal } from '../redux/modalSlice';
 import {  opendeletedModal } from '../redux/deletemodalSlice';
-
+import axios from 'axios'
+import { AddProgressStatus, setInputModal, setSelectedPriority } from '../redux/formSlice';
 const ToDoList = ({task}) => {
-
+ 
+  
     const dispatch=useDispatch()
+    const {showModal,ModalType,taskIdToUpdate}=useSelector(state=>state.modal)
+    const {selectedPriority,inputModal,tasksArray}=useSelector(state=>state.form)
+    
+  
+ 
     const getPriorityColor = (priority) => {
         switch (priority) {
           case 'high':
@@ -16,9 +23,94 @@ const ToDoList = ({task}) => {
             case 'low':
             return '#0ac947'; 
           default:
-            return '';
+            return ''
         }
-      };
+      }
+      
+      const handleStatusClick = () => {
+        let newStatus = 'To Do';
+        let newProgress = null;
+      
+        if (task.status === 'To Do') {
+          newStatus = 'In Progress';
+          newProgress = 50;
+        } else if (task.status === 'In Progress') {
+          newStatus = 'Done';
+          newProgress = 100;
+        }
+      
+        dispatch(
+          AddProgressStatus({
+            taskId: task.id,
+            status: newStatus,
+            progress: newProgress,
+          }))
+          localStorage.setItem(`task_${task.id}`, JSON.stringify({ status: newStatus, progress: newProgress }));
+        
+        
+        
+        }
+        
+        
+
+       
+          
+      
+      
+      const handleUpdateClick=async(taskId)=>
+      {
+        
+        dispatch(openModal({type:'update',id:taskId}))
+        
+        console.log(taskIdToUpdate)
+        try {
+          const res=await axios.get(`http://localhost:3000/api/gettask/${taskId}`)
+          const taskToUpdate = tasksArray.find((task) => task.id === taskId);
+          if (taskToUpdate) {
+            dispatch(AddProgressStatus({
+              taskId,
+              status: taskToUpdate.status,
+              progress: taskToUpdate.progress,
+            }));
+          }
+          
+          console.log(res.data)
+          
+          dispatch(setInputModal(res.data.task_name))
+          
+          dispatch(setSelectedPriority((res.data.priority)))
+          
+          
+          
+          
+        } catch (error) {
+          console.log(error.message)
+          
+        }
+
+      }
+      useEffect(() => {
+        // Check local storage for data related to each task
+        tasksArray.forEach((task) => {
+          const storedTaskData = localStorage.getItem(`task_${task.id}`);
+          if (storedTaskData) {
+            const { status, progress } = JSON.parse(storedTaskData);
+      
+            // Dispatch action to update status and progress in the Redux store
+            dispatch(
+              AddProgressStatus({
+                taskId: task.id,
+                status: status,
+                progress: progress,
+              })
+            );
+          }
+        });
+      }, [dispatch, tasksArray]);
+      
+     
+ 
+      
     
   return (
     <div className='bg-white rounded-xl shadow-md flex items-center justify-between mt-4 p-6'>
@@ -40,15 +132,15 @@ const ToDoList = ({task}) => {
 
         </span>
         <span className=' text-base font-bold capitalize' style={{color:getPriorityColor(task.priority)}}>
-            {task.priority}
+            {task.priority }
 
         </span>
 
     </div>
 
     <div className='text-center w-100'>
-        <button className='bg-gray-100 border-none rounded-lg text-[#7d8592] cursor-pointer font-semibold text-xs outline-none py-2 px-4'>
-            to Do
+        <button  onClick={handleStatusClick} className='bg-gray-100 border-none rounded-lg text-[#7d8592] cursor-pointer font-semibold text-xs outline-none py-2 px-4'>
+            {task.status || 'To Do'}
 
         </button>
 
@@ -56,12 +148,12 @@ const ToDoList = ({task}) => {
 
 
     <div>
-    <CircularProgress variant="determinate" value={100} className='w-24 h-24' />
+    <CircularProgress variant="determinate" value={task.progress}  className='w-24 h-24 ' />
 
     </div>
 
     <div className='flex justify-between'>
-    <svg onClick={()=>dispatch(openModal('update'))} width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg" className='cursor-pointer mr-5'><path  d="M14.8787 0.87868L6.29289 9.46447C6.10536 9.652 6 9.90636 6 10.1716V14.1716C6 14.7239 6.44772 15.1716 7 15.1716H11C11.2652 15.1716 11.5196 15.0662 11.7071 14.8787L20.2929 6.29289C21.4645 5.12132 21.4645 3.22183 20.2929 2.05025L19.1213 0.87868C17.9497 -0.292893 16.0503 -0.292893 14.8787 0.87868ZM18.8787 3.46447L18.9619 3.55867C19.2669 3.95096 19.2392 4.5182 18.8787 4.87868L10.584 13.1716H8V10.5856L16.2929 2.29289C16.6834 1.90237 17.3166 1.90237 17.7071 2.29289L18.8787 3.46447ZM10.0308 2.17157C10.0308 1.61929 9.5831 1.17157 9.03081 1.17157H5L4.78311 1.17619C2.12231 1.28975 0 3.48282 0 6.17157V16.1716L0.00461951 16.3885C0.118182 19.0493 2.31125 21.1716 5 21.1716H15L15.2169 21.167C17.8777 21.0534 20 18.8603 20 16.1716V11.2533L19.9933 11.1366C19.9355 10.6393 19.5128 10.2533 19 10.2533C18.4477 10.2533 18 10.701 18 11.2533V16.1716L17.9949 16.3478C17.9037 17.9227 16.5977 19.1716 15 19.1716H5L4.82373 19.1665C3.24892 19.0752 2 17.7693 2 16.1716V6.17157L2.00509 5.9953C2.09634 4.42049 3.40232 3.17157 5 3.17157H9.03081L9.14743 3.16485C9.64477 3.10708 10.0308 2.68441 10.0308 2.17157Z" fill="#0A1629"></path></svg>
+    <svg onClick={()=>handleUpdateClick(task.id)} width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg" className='cursor-pointer mr-5'><path  d="M14.8787 0.87868L6.29289 9.46447C6.10536 9.652 6 9.90636 6 10.1716V14.1716C6 14.7239 6.44772 15.1716 7 15.1716H11C11.2652 15.1716 11.5196 15.0662 11.7071 14.8787L20.2929 6.29289C21.4645 5.12132 21.4645 3.22183 20.2929 2.05025L19.1213 0.87868C17.9497 -0.292893 16.0503 -0.292893 14.8787 0.87868ZM18.8787 3.46447L18.9619 3.55867C19.2669 3.95096 19.2392 4.5182 18.8787 4.87868L10.584 13.1716H8V10.5856L16.2929 2.29289C16.6834 1.90237 17.3166 1.90237 17.7071 2.29289L18.8787 3.46447ZM10.0308 2.17157C10.0308 1.61929 9.5831 1.17157 9.03081 1.17157H5L4.78311 1.17619C2.12231 1.28975 0 3.48282 0 6.17157V16.1716L0.00461951 16.3885C0.118182 19.0493 2.31125 21.1716 5 21.1716H15L15.2169 21.167C17.8777 21.0534 20 18.8603 20 16.1716V11.2533L19.9933 11.1366C19.9355 10.6393 19.5128 10.2533 19 10.2533C18.4477 10.2533 18 10.701 18 11.2533V16.1716L17.9949 16.3478C17.9037 17.9227 16.5977 19.1716 15 19.1716H5L4.82373 19.1665C3.24892 19.0752 2 17.7693 2 16.1716V6.17157L2.00509 5.9953C2.09634 4.42049 3.40232 3.17157 5 3.17157H9.03081L9.14743 3.16485C9.64477 3.10708 10.0308 2.68441 10.0308 2.17157Z" fill="#0A1629"></path></svg>
     <svg onClick={()=>dispatch(opendeletedModal(task.id))
 
     
@@ -70,7 +162,7 @@ const ToDoList = ({task}) => {
     </div>
     
 
-
+    
       
     </div>
   )

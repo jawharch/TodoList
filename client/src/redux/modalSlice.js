@@ -3,7 +3,9 @@ import { createSlice } from "@reduxjs/toolkit";
 
 const initialState={
     showModal:false,
-    ModalType:''
+    ModalType:'',
+    taskIdToUpdate:null,
+    
 
 }
 const modalSlice=createSlice(
@@ -14,14 +16,20 @@ const modalSlice=createSlice(
         {
             openModal(state,action)
             {
+                const {type,id}=action.payload
+                
                 state.showModal=true
-                state.ModalType=action.payload
+                state.ModalType=type
+                state.taskIdToUpdate=id
+                
 
             },
             closeModal(state)
             {
                 state.showModal=false
                 state.ModalType=''
+                state.taskIdToUpdate=null
+                
 
             }
         }

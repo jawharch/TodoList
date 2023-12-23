@@ -44,3 +44,15 @@ exports.createTask = async (req, res) => {
       res.status(500).json({ error: error.message })
     }
   }
+exports.getTaskById = async (req, res) => {
+    const { id } = req.params;
+    try {
+      const task = await Task.findByPk(id);
+      if (!task) {
+        return res.status(404).json({ message: 'Task not found' });
+      }
+      res.status(200).json(task);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  };

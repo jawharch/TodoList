@@ -4,30 +4,34 @@ import ToDoList from './components/toDoList';
 import './App.css'
 import { useDispatch, useSelector } from 'react-redux';
 import { closeModal, openModal } from './redux/modalSlice';
-import { setInputModal, setSelectedPriority, taskFetch,addTask,updateTask } from './redux/formSlice';
+import { setInputModal, setSelectedPriority, taskFetch,addTask,updateTask,AddProgressStatus } from './redux/formSlice';
 import { closedeletedModal } from './redux/deletemodalSlice';
 import axios from 'axios'
 import { deleteTask } from './redux/formSlice';
 function App() {
-  
- 
-  
-  const [selectedButton, setSelectedButton] = useState(2)
-  
-  
 
   const dispatch=useDispatch()
-  const {showModal,ModalType}=useSelector(state=>state.modal)
+  const {showModal,ModalType,taskIdToUpdate}=useSelector(state=>state.modal)
   const {selectedPriority,inputModal,tasksArray}=useSelector(state=>state.form)
   const {showdeleteModal,taskIdToDelete}=useSelector(state=>state.deletemodal)
-  const handlePriorClick=(index,value)=>
+
+
+  const handlePriorClick=(value)=>
   {
-    setSelectedButton(index)
+    
     dispatch(setSelectedPriority(value))
 
   }
   const handleAddClick=async(e)=>
   {
+    
+    dispatch(
+      AddProgressStatus({
+        taskId: taskIdToUpdate,
+        stat: 'To Do',
+        prog: null,
+      }))
+    
     e.preventDefault()
     const data={
       task_name: inputModal, 
@@ -36,9 +40,13 @@ function App() {
     try {
       const res=await axios.post('http://localhost:3000/api/create-task',data)
       dispatch(addTask(res.data))
+      
       dispatch(closeModal())
       dispatch(setInputModal(''))
+      
+      
       dispatch(setSelectedPriority('low'))
+      
 
 
       
@@ -55,11 +63,13 @@ function App() {
 
   const handleDeleteTask=async()=>
   {
+
     try {
       const res=await axios.delete(`http://localhost:3000/api/delete-task/${taskIdToDelete}`)
       console.log(res.data)
       dispatch(closedeletedModal())
       dispatch(deleteTask(taskIdToDelete))
+      dispatch(setInputModal(""))
 
 
 
@@ -70,13 +80,54 @@ function App() {
     }
 
   }
+  const handleEditClick=async(e)=>
+  {
+    
+    e.preventDefault()
+
+    const data={
+      task_name: inputModal, 
+      priority: selectedPriority
+    }
+    try {
+      
+      const res=await axios.put(`http://localhost:3000/api/update-task/${taskIdToUpdate}`,data)
+      
+      dispatch(updateTask({id:taskIdToUpdate,data:res.data}))
+      dispatch(closeModal())
+      const updatedTask = res.data; 
+
+      dispatch(AddProgressStatus({
+        taskIdToUpdate,
+        status: updatedTask.status,
+        progress: updatedTask.progress,
+      }));
+      
+      
+
+      
+    } catch (error) {
+      console.log(error)
+      
+    }
+
+  }
+  const handle=()=>
+  {
+    dispatch(openModal({type:'create'}))
+    dispatch(setInputModal(''))
+
+
+
+  }
  
   return (
     <div className='mx-auto max-w-full px-4 sm:px-6 lg:px-8 w-full md:max-w-3xl'>
       <div className='my-12'>
       <div className='flex items-center justify-between'>
         <h2 className='text-0a1629 text-4xl font-bold'>Task List</h2>
-        <button onClick={()=>dispatch(openModal('create'))} className='bg-[#713fff] text-white rounded-lg shadow-md hover:shadow-lg focus:outline-none px-8 py-3 font-semibold cursor-pointer text-base '>
+        <button onClick={handle
+        } className='bg-[#713fff] text-white rounded-lg shadow-md hover:shadow-lg focus:outline-none px-8 py-3 font-semibold cursor-pointer text-base '>
           
             <AddIcon />
 
@@ -91,10 +142,9 @@ function App() {
       <div className='my-12'>
        {
         tasksArray.length>0 ?(
-          tasksArray
-          ?.map((task,index)=>
+          [...tasksArray].reverse().map((task,index)=>
          (
-          <ToDoList key={index} task={task} />
+          <ToDoList key={index} task={task}  />
          ))
 
         ): 'NO TASKS :('
@@ -124,6 +174,7 @@ function App() {
           <label className='text-[#7d8592] text-lg block font-bold mb-2'>Task</label>
           <input
             type="text"
+            value={inputModal}
             placeholder="Type your task here..."
             className="bg-white border border-solid border-gray-300 rounded-lg shadow-sm font-normal outline-none px-4 py-4 w-full"
             onChange={(e)=>dispatch(setInputModal(e.target.value))}
@@ -136,19 +187,19 @@ function App() {
           </span>
           <ul className='flex gap-6 mt-5 justify-center'>
             <li  className= {`border border-solid border-red-500 text-red-500 rounded-lg cursor-pointer text-base font-medium py-2 px-4 text-center uppercase w-24 border border-solid border-gray-300 ${
-              selectedButton===0 ? 'bg-red-600 text-white':''
-            }`}  onClick={()=>handlePriorClick(0,'high')} >high</li>
+              selectedPriority==='high' ? 'bg-red-600 text-white':''
+            }`}  onClick={()=>handlePriorClick('high')} >high</li>
             <li  className={` border border-solid border-yellow-500 text-yellow-500 rounded-lg cursor-pointer text-base font-medium py-2 px-4 text-center uppercase w-24 border border-solid border-gray-300 ${
-              selectedButton===1 ? ' bg-yellow-500 text-[#fff]':''
+              selectedPriority==='medium' ? ' bg-yellow-500 text-[#fff]':''
             }` }
-            onClick={()=>handlePriorClick(1,'medium')}>medium</li>
+            onClick={()=>handlePriorClick('medium')}>medium</li>
             <li  className={`border border-solid border-green-500 text-green-500 rounded-lg cursor-pointer text-base font-medium py-2 px-4 text-center uppercase w-24 border border-solid border-gray-300
             ${
-              selectedButton===2 ? ' text-[#fff]  bg-green-500':''
+              selectedPriority==='low' ? ' text-[#fff]  bg-green-500':''
             } 
             
             
-            `} onClick={()=>handlePriorClick(2,'low')}>low</li>
+            `} onClick={()=>handlePriorClick('low')}>low</li>
             </ul>
 
 
@@ -156,7 +207,7 @@ function App() {
 
 
         <div className='flex justify-end mt-12'>
-          <button type='submit' onClick={handleAddClick} disabled={!inputModal && ModalType==='create'} className='bg-purple-600 rounded-lg shadow-md text-white cursor-pointer text-base font-semibold outline-none py-3 px-8 disabled:cursor-not-allowed disabled:bg-[#7d8592]'>
+          <button type='submit' onClick={ ModalType==='create'? handleAddClick:handleEditClick} disabled={!inputModal && ModalType==='create'} className='bg-purple-600 rounded-lg shadow-md text-white cursor-pointer text-base font-semibold outline-none py-3 px-8 disabled:cursor-not-allowed disabled:bg-[#7d8592]'>
           {ModalType==='create' ? 'Add ':'Edit '}
 
           </button>

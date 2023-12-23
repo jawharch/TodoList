@@ -7,6 +7,9 @@ const initialState={
     tasksArray:[],
     inputModal:'',
     selectedPriority:'',
+    
+    
+   
 
 
 }
@@ -32,14 +35,44 @@ const formSlice=createSlice(
                 state.selectedPriority = action.payload
               },
               addTask(state, action) {
-                state.tasksArray.push(action.payload)
+                const newTask = { ...action.payload, status: 'To Do', progress: null }
+
+                state.tasksArray.push(newTask)
               },
               deleteTask(state,action)
               {
-                state.tasksArray = state.tasksArray.filter((task) => task.id !== action.payload);
+                state.tasksArray = state.tasksArray.filter((task) => task.id !== action.payload)
+              },
+              updateTask(state, action) {
+                const { id, data } = action.payload;
+                return {
+                  ...state,
+                  tasksArray: state.tasksArray.map(task => {
+                    if (task.id === id) {
+                      
+                      return {
+                        ...task,
+                        ...data 
+                      };
+                    }
+                    return task; 
+                  })
+                };
+              },
+              AddProgressStatus(state, action) {
+                const { taskId, status, progress } = action.payload;
+                const taskToUpdate = state.tasksArray.find(task => task.id === taskId);
+              
+                if (taskToUpdate) {
+                  taskToUpdate.status = status;
+                  taskToUpdate.progress = progress;
+                }
               }
               
-        },
+              
+             
+              
+              },
         extraReducers:(builder)=>{
             builder
             .addCase(taskFetch.pending ,(state,action)=>
@@ -63,9 +96,9 @@ const formSlice=createSlice(
                 state.loading=false
             },
 
-)}
+)}}
 
-    }
+    
 )
-export  const {setInputModal,setSelectedPriority,addTask,updateTask,deleteTask}=formSlice.actions
+export  const {setInputModal,setSelectedPriority,addTask,updateTask,deleteTask,AddProgressStatus}=formSlice.actions
 export default formSlice.reducer
