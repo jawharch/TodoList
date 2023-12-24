@@ -8,6 +8,7 @@ import { setInputModal, setSelectedPriority, taskFetch,addTask,updateTask,AddPro
 import { closedeletedModal } from './redux/deletemodalSlice';
 import axios from 'axios'
 import { deleteTask } from './redux/formSlice';
+import { Stack } from '@mui/material';
 function App() {
 
   const dispatch=useDispatch()
@@ -124,7 +125,7 @@ function App() {
   return (
     <div className='mx-auto max-w-full px-4 sm:px-6 lg:px-8 w-full md:max-w-3xl'>
       <div className='my-12'>
-      <div className='flex items-center justify-between'>
+      <Stack direction='row' className='flex items-center justify-between'>
         <h2 className='text-0a1629 text-4xl font-bold'>Task List</h2>
         <button onClick={handle
         } className='bg-[#713fff] text-white rounded-lg shadow-md hover:shadow-lg focus:outline-none px-8 py-3 font-semibold cursor-pointer text-base '>
@@ -136,10 +137,10 @@ function App() {
           Add Task
         </button>
 
-      </div>
+      </Stack>
       
 
-      <div className='my-12'>
+      <Stack className='my-12'>
        {
         tasksArray.length>0 ?(
           [...tasksArray].reverse().map((task,index)=>
@@ -153,7 +154,7 @@ function App() {
         
         
 
-      </div>
+      </Stack>
       </div>
 
 

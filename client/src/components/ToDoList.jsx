@@ -5,6 +5,7 @@ import { openModal } from '../redux/modalSlice';
 import {  opendeletedModal } from '../redux/deletemodalSlice';
 import axios from 'axios'
 import { AddProgressStatus, setInputModal, setSelectedPriority } from '../redux/formSlice';
+import { Stack } from '@mui/material';
 const ToDoList = ({task}) => {
  
   
@@ -113,7 +114,7 @@ const ToDoList = ({task}) => {
       
     
   return (
-    <div className='bg-white rounded-xl shadow-md flex items-center justify-between mt-4 p-6'>
+    <Stack direction='row' className='bg-white rounded-xl shadow-md flex items-center justify-between mt-4 p-6'>
     <div className='w-44 flex flex-col '>
         <span className='text-[rgb(145,146,158)] text-base font-bold mb-2'>
             Task
@@ -164,7 +165,7 @@ const ToDoList = ({task}) => {
 
     
       
-    </div>
+    </Stack>
   )
 }
 
